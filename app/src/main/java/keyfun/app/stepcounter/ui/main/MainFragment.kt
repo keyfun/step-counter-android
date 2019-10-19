@@ -168,6 +168,8 @@ class MainFragment : Fragment(), SensorEventListener {
             tv_end_time.text =
                 getString(R.string.end_time, AppUtils.getFormattedDate(it))
         }
+
+        stopService()
         SharedPreferencesManager.instance.clear()
     }
 }
