@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment(), SensorEventListener {
 
-    private var running = false
+    private var isStarted = false
     private var sensorManager: SensorManager? = null
     private var stepCounter = 0
     private var counterSteps = 0
@@ -45,24 +45,20 @@ class MainFragment : Fragment(), SensorEventListener {
         // TODO: Use the ViewModel
 
         sensorManager = context?.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        initUI()
+        bindUI()
     }
 
     override fun onResume() {
         super.onResume()
-        running = true
-        val stepsSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-
-        if (stepsSensor == null) {
-            Toast.makeText(context, "No Step Counter Sensor !", Toast.LENGTH_SHORT).show()
-        } else {
-            sensorManager?.registerListener(this, stepsSensor, SensorManager.SENSOR_DELAY_UI)
+        if (this.isStarted) {
+            startCounter()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        running = false
-        sensorManager?.unregisterListener(this)
+        stopCounter()
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -81,6 +77,48 @@ class MainFragment : Fragment(), SensorEventListener {
                 stepCounter = event.values[0].toInt() - counterSteps
             }
         }
-        stepsValue.text = "$stepCounter"
+        tv_step_count.text = "$stepCounter"
+    }
+
+    private fun initUI() {
+        tv_start_time.text = getString(R.string.start_time, "-")
+        tv_end_time.text = getString(R.string.end_time, "-")
+        tv_step_count.text = "$stepCounter"
+        btn_start.text = getString(R.string.start)
+    }
+
+    private fun bindUI() {
+        btn_start.setOnClickListener {
+            if (this.isStarted) {
+                stopCounter()
+                btn_start.text = getString(R.string.start)
+            } else {
+                startCounter()
+                btn_start.text = getString(R.string.stop)
+            }
+        }
+    }
+
+    private fun startCounter() {
+        isStarted = true
+        val stepsSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+
+        if (stepsSensor == null) {
+            Toast.makeText(context, "No Step Counter Sensor !", Toast.LENGTH_SHORT).show()
+        } else {
+            sensorManager?.registerListener(this, stepsSensor, SensorManager.SENSOR_DELAY_UI)
+        }
+
+        this.stepCounter = 0
+        this.stepDetector = 0
+        this.counterSteps = 0
+
+        // reset UI
+        initUI()
+    }
+
+    private fun stopCounter() {
+        isStarted = false
+        sensorManager?.unregisterListener(this)
     }
 }
